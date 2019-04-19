@@ -12,12 +12,12 @@
           set -x
           cat > clonemap.yaml << EOF
           clonemap:
-            - name: openstack-infra/devstack-gate
+            - name: openstack/devstack-gate
               dest: devstack-gate
           EOF
           /usr/zuul-env/bin/zuul-cloner -m clonemap.yaml --cache-dir /opt/git \
-              https://git.openstack.org \
-              openstack-infra/devstack-gate
+              https://opendev.org \
+              openstack/devstack-gate
         executable: /bin/bash
         chdir: '{{ ansible_user_dir }}/workspace'
       environment: '{{ zuul | zuul_legacy_vars }}'
@@ -31,11 +31,11 @@
           export DEVSTACK_GATE_NEUTRON=1
           export BRANCH_OVERRIDE=default
 
-          export DEVSTACK_LOCAL_CONFIG="enable_plugin designate https://git.openstack.org/openstack/designate"
+          export DEVSTACK_LOCAL_CONFIG="enable_plugin designate https://opendev.org/openstack/designate"
           export DEVSTACK_LOCAL_CONFIG+=$'\n'"DESIGNATE_SERVICE_PORT_DNS=5322"
           export PROJECTS="openstack/designate $PROJECTS"
 
-          export PROJECTS="openstack/ospurge $PROJECTS"
+          export PROJECTS="x/ospurge $PROJECTS"
           if [ "$BRANCH_OVERRIDE" != "default" ] ; then
               export OVERRIDE_ZUUL_BRANCH=$BRANCH_OVERRIDE
           fi

@@ -5,8 +5,8 @@
     post-run: playbooks/ospurge-functional/post.yaml
     timeout: 3600
     required-projects:
-      - openstack-infra/devstack-gate
-      - openstack/ospurge
+      - openstack/devstack-gate
+      - x/ospurge
       - openstack/designate
       - openstack/python-designateclient
     irrelevant-files: &dsvm-irrelevant-files
