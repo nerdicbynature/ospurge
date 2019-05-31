@@ -45,9 +45,11 @@ class RouterInterfaces(base.ServiceResource):
 
     def list(self):
         return self.cloud.list_ports(
-            filters={'device_owner': ['network:router_interface',
-                                      'network:router_interface_distributed'],
-                     'tenant_id': self.cleanup_project_id}
+            filters={
+                'device_owner': ['network:router_interface',
+                                 'network:router_interface_distributed',
+                                 'network:ha_router_replicated_interface'],
+                'tenant_id': self.cleanup_project_id}
         )
 
     def delete(self, resource):
@@ -65,9 +67,11 @@ class Routers(base.ServiceResource):
 
     def check_prerequisite(self):
         return self.cloud.list_ports(
-            filters={'device_owner': ['network:router_interface',
-                                      'network:router_interface_distributed'],
-                     'tenant_id': self.cleanup_project_id}
+            filters={
+                'device_owner': ['network:router_interface',
+                                 'network:router_interface_distributed',
+                                 'network:ha_router_replicated_interface'],
+                'tenant_id': self.cleanup_project_id}
         ) == []
 
     def list(self):
@@ -91,7 +95,8 @@ class Ports(base.ServiceResource):
         )
         excluded = ['network:dhcp',
                     'network:router_interface',
-                    'network:router_interface_distributed']
+                    'network:router_interface_distributed',
+                    'network:ha_router_replicated_interface']
         return [p for p in ports if p['device_owner'] not in excluded]
 
     def delete(self, resource):

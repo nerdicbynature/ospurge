@@ -79,9 +79,11 @@ class TestRouterInterfaces(unittest.TestCase):
         self.assertIs(self.cloud.list_ports.return_value,
                       neutron.RouterInterfaces(self.creds_manager).list())
         self.cloud.list_ports.assert_called_once_with(
-            filters={'device_owner': ['network:router_interface',
-                                      'network:router_interface_distributed'],
-                     'tenant_id': self.creds_manager.project_id}
+            filters={
+                'device_owner': ['network:router_interface',
+                                 'network:router_interface_distributed',
+                                 'network:ha_router_replicated_interface'],
+                'tenant_id': self.creds_manager.project_id}
         )
 
     def test_delete(self):
@@ -116,9 +118,11 @@ class TestRouters(unittest.TestCase):
             False, neutron.Routers(self.creds_manager).check_prerequisite())
 
         self.cloud.list_ports.assert_called_with(
-            filters={'device_owner': ['network:router_interface',
-                                      'network:router_interface_distributed'],
-                     'tenant_id': self.creds_manager.project_id}
+            filters={
+                'device_owner': ['network:router_interface',
+                                 'network:router_interface_distributed',
+                                 'network:ha_router_replicated_interface'],
+                'tenant_id': self.creds_manager.project_id}
         )
 
     def test_list(self):
