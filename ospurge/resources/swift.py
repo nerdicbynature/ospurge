@@ -9,6 +9,9 @@
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #  License for the specific language governing permissions and limitations
 #  under the License.
+
+from six.moves import urllib_parse
+
 from ospurge.resources import base
 from ospurge.resources.base import BaseServiceResource
 from ospurge.resources import glance
@@ -17,7 +20,9 @@ from ospurge.resources import glance
 class ListObjectsMixin(BaseServiceResource):
     def list_objects(self):
         for container in self.cloud.list_containers():
-            for obj in self.cloud.list_objects(container['name']):
+            for obj in self.cloud.list_objects(
+                    urllib_parse.quote(container['name'])
+            ):
                 obj['container_name'] = container['name']
                 yield obj
 
@@ -34,7 +39,10 @@ class Objects(base.ServiceResource, glance.ListImagesMixin, ListObjectsMixin):
             yield item
 
     def delete(self, resource):
-        self.cloud.delete_object(resource['container_name'], resource['name'])
+        self.cloud.delete_object(
+            urllib_parse.quote(resource['container_name']),
+            urllib_parse.quote(resource['name'])
+        )
 
     @staticmethod
     def to_str(resource):
@@ -52,7 +60,7 @@ class Containers(base.ServiceResource, ListObjectsMixin):
         return self.cloud.list_containers()
 
     def delete(self, resource):
-        self.cloud.delete_container(resource['name'])
+        self.cloud.delete_container(urllib_parse.quote(resource['name']))
 
     @staticmethod
     def to_str(resource):

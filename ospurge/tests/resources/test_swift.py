@@ -11,6 +11,8 @@
 #  under the License.
 import unittest
 
+from six.moves import urllib_parse
+
 import shade
 
 from ospurge.resources import swift
@@ -76,10 +78,17 @@ class TestObjects(unittest.TestCase):
         self.assertRaises(StopIteration, next, objects)
 
     def test_delete(self):
-        obj = mock.MagicMock()
-        self.assertIsNone(swift.Objects(self.creds_manager).delete(obj))
-        self.cloud.delete_object.assert_called_once_with(
-            obj['container_name'], obj['name'])
+        objects = [
+            {'name': 'toto', 'container_name': 'foo'},
+            {'name': 'tata%20foo', 'container_name': 'baz%20bar'},
+            {'name': 'titi#1', 'container_name': 'bar#2'},
+        ]
+        for obj in objects:
+            self.assertIsNone(swift.Objects(self.creds_manager).delete(obj))
+            self.cloud.delete_object.assert_called_with(
+                urllib_parse.quote(obj['container_name']),
+                urllib_parse.quote(obj['name'])
+            )
 
     def test_to_string(self):
         obj = mock.MagicMock()
@@ -111,9 +120,14 @@ class TestContainers(unittest.TestCase):
         self.cloud.list_containers.assert_called_once_with()
 
     def test_delete(self):
-        cont = mock.MagicMock()
+        cont = {'bytes': 8,
+                'count': 2,
+                'last_modified': '2019-06-05T15:20:59.450120',
+                'name': 'Pouet éêù #'}
         self.assertIsNone(swift.Containers(self.creds_manager).delete(cont))
-        self.cloud.delete_container.assert_called_once_with(cont['name'])
+        self.cloud.delete_container.assert_called_once_with(
+            urllib_parse.quote(cont['name'])
+        )
 
     def test_to_string(self):
         container = mock.MagicMock()
