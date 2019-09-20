@@ -14,15 +14,12 @@ import logging
 import types
 import unittest
 
-import shade.exc
-
 from openstack import exceptions as os_exceptions
 
 from ospurge import exceptions
 from ospurge import main
 from ospurge.resources.base import ServiceResource
 from ospurge.tests import mock
-from ospurge import utils
 
 
 try:
@@ -129,7 +126,7 @@ class TestFunctions(unittest.TestCase):
     def test_runner_with_recoverable_exception(self):
         class MyEndpointNotFound(Exception):
             pass
-        exc = shade.exc.OpenStackCloudException("")
+        exc = os_exceptions.OpenStackCloudException("")
         exc.inner_exception = (MyEndpointNotFound, )
         resource_manager = mock.Mock(list=mock.Mock(side_effect=exc))
         exit = mock.Mock()
@@ -145,19 +142,18 @@ class TestFunctions(unittest.TestCase):
         self.assertFalse(exit.set.called)
 
     @mock.patch.object(main, 'connection')
-    @mock.patch.object(main, 'os_client_config', autospec=True)
-    @mock.patch.object(main, 'shade')
+    @mock.patch.object(main, 'loader', autospec=True)
     @mock.patch('argparse.ArgumentParser.parse_args')
     @mock.patch('threading.Event', autospec=True)
     @mock.patch('concurrent.futures.ThreadPoolExecutor', autospec=True)
     @mock.patch('sys.exit', autospec=True)
-    def test_main(self, m_sys_exit, m_tpe, m_event, m_parse_args, m_shade,
+    def test_main(self, m_sys_exit, m_tpe, m_event, m_parse_args,
                   m_oscc, m_conn):
         m_tpe.return_value.__enter__.return_value.map.side_effect = \
             KeyboardInterrupt
         m_parse_args.return_value.purge_own_project = False
         m_parse_args.return_value.resource = None
-        m_conn.Connection().identity.get_tenant().is_enabled = False
+        m_conn.Connection().get_project().is_enabled = False
 
         main.main()
 
@@ -181,14 +177,13 @@ class TestFunctions(unittest.TestCase):
         self.assertIsInstance(m_sys_exit.call_args[0][0], int)
 
     @mock.patch.object(main, 'connection')
-    @mock.patch.object(main, 'os_client_config', autospec=True)
-    @mock.patch.object(main, 'shade')
+    @mock.patch.object(main, 'loader', autospec=True)
     @mock.patch('argparse.ArgumentParser.parse_args')
     @mock.patch('threading.Event', autospec=True)
     @mock.patch('concurrent.futures.ThreadPoolExecutor', autospec=True)
     @mock.patch('sys.exit', autospec=True)
     def test_main_resource(self, m_sys_exit, m_tpe, m_event, m_parse_args,
-                           m_shade, m_oscc, m_conn):
+                           m_oscc, m_conn):
         m_tpe.return_value.__enter__.return_value.map.side_effect = \
             KeyboardInterrupt
         m_parse_args.return_value.purge_own_project = False
@@ -202,86 +197,88 @@ class TestFunctions(unittest.TestCase):
             self.assertIsInstance(obj, ServiceResource)
 
 
-@mock.patch.object(main, 'os_client_config')
+@mock.patch.object(main, 'loader')
 @mock.patch.object(main, 'connection')
-@mock.patch.object(main, 'shade')
 class TestCredentialsManager(unittest.TestCase):
-    def test_init_with_purge_own_project(self, m_shade, m_conn, m_osc):
+    def test_init_with_purge_own_project(self, m_conn, m_osc):
         _options = SimpleNamespace(
             purge_own_project=True, purge_project=None)
         _config = m_osc.OpenStackConfig()
-        creds_mgr = main.CredentialsManager(_options, _config)
+        creds_manager = main.CredentialsManager(_options, _config)
 
-        self.assertEqual(_options, creds_mgr.options)
-        self.assertEqual(False, creds_mgr.revoke_role_after_purge)
-        self.assertEqual(False, creds_mgr.disable_project_after_purge)
-        self.assertIsNone(creds_mgr.connection)
+        self.assertEqual(_options, creds_manager.options)
+        self.assertEqual(False, creds_manager.revoke_role_after_purge)
+        self.assertEqual(False, creds_manager.disable_project_after_purge)
+        self.assertEqual(m_conn.Connection.return_value,
+                         creds_manager.cloud)
 
-        m_shade.openstack_cloud.assert_called_once_with(
-            argparse=_options, config=_config)
-        self.assertEqual(m_shade.openstack_cloud.return_value,
-                         creds_mgr.cloud)
+        m_conn.Connection.assert_called_once_with(
+            config=_config.get_one())
+        self.assertEqual(m_conn.Connection.return_value,
+                         creds_manager.cloud)
 
         self.assertEqual(
-            creds_mgr.cloud.keystone_session.get_user_id(),
-            creds_mgr.user_id
+            creds_manager.cloud.current_user_id,
+            creds_manager.user_id
         )
         self.assertEqual(
-            creds_mgr.cloud.keystone_session.get_project_id(),
-            creds_mgr.project_id
+            creds_manager.cloud.current_project_id,
+            creds_manager.project_id
         )
 
-        creds_mgr.cloud.cloud_config.get_auth_args.assert_called_once_with()
-
-    @mock.patch.object(utils, 'replace_project_info')
-    def test_init_with_purge_project(self, m_replace, m_shade, m_conn, m_osc):
+    def test_init_with_purge_project(self, m_conn, m_osc):
         _config = m_osc.OpenStackConfig()
         _options = SimpleNamespace(
             purge_own_project=False, purge_project=mock.sentinel.purge_project)
-        creds_mgr = main.CredentialsManager(_options, _config)
+        creds_manager = main.CredentialsManager(_options, _config)
 
         m_conn.Connection.assert_called_once_with(config=_config.get_one())
-        self.assertEqual(m_conn.Connection.return_value,
-                         creds_mgr.connection)
-
-        creds_mgr.connection.identity.get_tenant.assert_called_once_with(
+        m_conn.Connection().get_project.assert_called_once_with(
             _options.purge_project)
 
         self.assertEqual(
-            creds_mgr.connection.identity.get_user_id.return_value,
-            creds_mgr.user_id
+            m_conn.Connection.return_value,
+            creds_manager.admin_cloud
         )
         self.assertEqual(
-            creds_mgr.connection.identity.get_tenant().id,
-            creds_mgr.project_id
+            m_conn.Connection().connect_as_project.return_value,
+            creds_manager.cloud
         )
-        self.assertFalse(creds_mgr.disable_project_after_purge)
-        self.assertEqual(
-            m_shade.openstack_cloud.return_value,
-            creds_mgr.cloud
-        )
-        m_replace.assert_called_once_with(
-            creds_mgr.connection.config.config,
-            creds_mgr.project_id
-        )
-        creds_mgr.cloud.cloud_config.get_auth_args.assert_called_once_with()
 
-    def test_init_with_project_not_found(self, m_shade, m_conn, m_osc):
-        m_conn.Connection.return_value.identity.get_tenant\
-            .side_effect = os_exceptions.NotFoundException
+        self.assertEqual(
+            creds_manager.cloud.current_user_id,
+            creds_manager.user_id
+        )
+        self.assertEqual(
+            creds_manager.cloud.current_project_id,
+            creds_manager.project_id
+        )
+        self.assertFalse(creds_manager.disable_project_after_purge)
+
+    def test_init_with_project_not_found(self, m_conn, m_osc):
+        m_conn.Connection().get_project.return_value = None
         self.assertRaises(
             exceptions.OSProjectNotFound,
             main.CredentialsManager,
             mock.Mock(purge_own_project=False), m_osc.OpenStackConfig()
         )
 
-    def test_ensure_role_on_project(self, m_shade, m_conn, m_osc):
+    def test_ensure_role_on_project(self, m_conn, m_osc):
         options = mock.Mock(purge_own_project=False)
         config = m_osc.OpenStackConfig()
         creds_manager = main.CredentialsManager(options, config)
         creds_manager.ensure_role_on_project()
 
-        m_conn.Connection.return_value.grant_role.assert_called_once_with(
+        self.assertEqual(
+            m_conn.Connection.return_value,
+            creds_manager.admin_cloud
+        )
+        self.assertEqual(
+            m_conn.Connection().connect_as_project.return_value,
+            creds_manager.cloud
+        )
+
+        creds_manager.admin_cloud.grant_role.assert_called_once_with(
             options.admin_role_name, project=options.purge_project,
             user=mock.ANY)
         self.assertEqual(True, creds_manager.revoke_role_after_purge)
@@ -293,24 +290,45 @@ class TestCredentialsManager(unittest.TestCase):
         creds_manager.ensure_role_on_project()
         self.assertEqual(False, creds_manager.revoke_role_after_purge)
 
-    def test_revoke_role_on_project(self, m_shade, m_conn, m_osc):
+    def test_revoke_role_on_project(self, m_conn, m_osc):
         options = mock.Mock(purge_own_project=False)
         config = m_osc.OpenStackConfig()
         creds_manager = main.CredentialsManager(options, config)
         creds_manager.revoke_role_on_project()
 
-        m_conn.Connection().revoke_role.assert_called_once_with(
+        self.assertEqual(
+            m_conn.Connection.return_value,
+            creds_manager.admin_cloud
+        )
+        self.assertEqual(
+            m_conn.Connection().connect_as_project.return_value,
+            creds_manager.cloud
+        )
+
+        creds_manager.admin_cloud.revoke_role.assert_called_once_with(
             options.admin_role_name, project=options.purge_project,
             user=mock.ANY)
 
-    def test_ensure_enabled_project(self, m_shade, m_conn, m_osc):
-        m_conn.Connection().identity.get_tenant().is_enabled = False
+    def test_ensure_enabled_project(self, m_conn, m_osc):
+        m_conn.Connection().get_project().is_enabled = False
+        options = mock.Mock(purge_own_project=False)
         creds_manager = main.CredentialsManager(
-            mock.Mock(purge_own_project=False), m_osc.OpenStackConfig())
+            options, m_osc.OpenStackConfig())
         creds_manager.ensure_enabled_project()
 
+        self.assertEqual(
+            m_conn.Connection.return_value,
+            creds_manager.admin_cloud
+        )
+        self.assertEqual(
+            m_conn.Connection().connect_as_project.return_value,
+            creds_manager.cloud
+        )
+
         self.assertEqual(True, creds_manager.disable_project_after_purge)
-        m_conn.Connection().update_project.assert_called_once_with(
+        m_conn.Connection().connect_as_project.assert_called_once_with(
+            options.purge_project)
+        creds_manager.admin_cloud.update_project.assert_called_once_with(
             mock.ANY, enabled=True)
 
         # If project is enabled before purge, no need to disable it after
@@ -321,12 +339,23 @@ class TestCredentialsManager(unittest.TestCase):
         self.assertEqual(False, creds_manager.disable_project_after_purge)
         self.assertEqual(1, m_conn.Connection().update_project.call_count)
 
-    def test_disable_project(self, m_shade, m_conn, m_osc):
+    def test_disable_project(self, m_conn, m_osc):
         options = mock.Mock(purge_own_project=False)
         config = m_osc.OpenStackConfig()
         creds_manager = main.CredentialsManager(options, config)
         creds_manager.disable_project()
 
+        self.assertEqual(
+            m_conn.Connection.return_value,
+            creds_manager.admin_cloud
+        )
+        self.assertEqual(
+            m_conn.Connection().connect_as_project.return_value,
+            creds_manager.cloud
+        )
+
+        m_conn.Connection().connect_as_project.assert_called_once_with(
+            options.purge_project)
         m_conn.Connection().update_project.assert_called_once_with(
             mock.ANY, enabled=False
         )

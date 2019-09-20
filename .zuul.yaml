@@ -1,14 +1,20 @@
 - job:
     name: ospurge-functional
-    parent: legacy-dsvm-base
-    run: playbooks/ospurge-functional/run.yaml
-    post-run: playbooks/ospurge-functional/post.yaml
+    parent: devstack-tox-functional-consumer
     timeout: 3600
     required-projects:
       - openstack/devstack-gate
       - x/ospurge
       - openstack/designate
       - openstack/python-designateclient
+    roles:
+      - zuul: openstack-infra/devstack
+    vars:
+        devstack_plugins:
+            designate: https://opendev.org/openstack/designate
+        devstack_localrc:
+            DESIGNATE_SERVICE_PORT_DNS: 5322
+        tox_envlist: functional
     irrelevant-files: &dsvm-irrelevant-files
       - ^(test-|)requirements.txt$
       - ^.*\.rst$

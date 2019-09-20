@@ -11,7 +11,7 @@
 #  under the License.
 import unittest
 
-import shade
+import openstack.connection
 
 from ospurge.resources import neutron
 from ospurge.tests import mock
@@ -19,7 +19,7 @@ from ospurge.tests import mock
 
 class TestFloatingIPs(unittest.TestCase):
     def setUp(self):
-        self.cloud = mock.Mock(spec_set=shade.openstackcloud.OpenStackCloud)
+        self.cloud = mock.Mock(spec_set=openstack.connection.Connection)
         self.creds_manager = mock.Mock(cloud=self.cloud)
 
     def test_check_prerequisite(self):
@@ -55,7 +55,7 @@ class TestFloatingIPs(unittest.TestCase):
 
 class TestRouterInterfaces(unittest.TestCase):
     def setUp(self):
-        self.cloud = mock.Mock(spec_set=shade.openstackcloud.OpenStackCloud)
+        self.cloud = mock.Mock(spec_set=openstack.connection.Connection)
         self.creds_manager = mock.Mock(cloud=self.cloud)
 
     def test_check_prerequisite(self):
@@ -103,7 +103,7 @@ class TestRouterInterfaces(unittest.TestCase):
 
 class TestRouters(unittest.TestCase):
     def setUp(self):
-        self.cloud = mock.Mock(spec_set=shade.openstackcloud.OpenStackCloud)
+        self.cloud = mock.Mock(spec_set=openstack.connection.Connection)
         self.creds_manager = mock.Mock(cloud=self.cloud)
 
     def test_check_prerequisite(self):
@@ -139,7 +139,7 @@ class TestRouters(unittest.TestCase):
 
 class TestPorts(unittest.TestCase):
     def setUp(self):
-        self.cloud = mock.Mock(spec_set=shade.openstackcloud.OpenStackCloud)
+        self.cloud = mock.Mock(spec_set=openstack.connection.Connection)
         self.creds_manager = mock.Mock(cloud=self.cloud)
 
     def test_list(self):
@@ -167,7 +167,7 @@ class TestPorts(unittest.TestCase):
 
 class TestNetworks(unittest.TestCase):
     def setUp(self):
-        self.cloud = mock.Mock(spec_set=shade.openstackcloud.OpenStackCloud)
+        self.cloud = mock.Mock(spec_set=openstack.connection.Connection)
         self.creds_manager = mock.Mock(cloud=self.cloud)
 
     def test_check_prerequisite(self):
@@ -211,7 +211,7 @@ class TestNetworks(unittest.TestCase):
 
 class TestSecurityGroups(unittest.TestCase):
     def setUp(self):
-        self.cloud = mock.Mock(spec_set=shade.openstackcloud.OpenStackCloud)
+        self.cloud = mock.Mock(spec_set=openstack.connection.Connection)
         self.creds_manager = mock.Mock(cloud=self.cloud)
 
     def test_list(self):

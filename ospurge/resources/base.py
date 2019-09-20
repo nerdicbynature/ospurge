@@ -25,7 +25,7 @@ from ospurge import exceptions
 
 if TYPE_CHECKING:  # pragma: no cover
     import argparse  # noqa: F401
-    import shade  # noqa: F401
+    import openstack.connection as os_connection  # noqa: F401
     from typing import Optional  # noqa: F401
 
 
@@ -90,7 +90,7 @@ else:   # pragma: no cover here
 class BaseServiceResource(object):
     def __init__(self):
         self.cleanup_project_id = None  # type: Optional[str]
-        self.cloud = None  # type: Optional[shade.OpenStackCloud]
+        self.cloud = None  # type: Optional[os_connection.Connection]
         self.options = None  # type: Optional[argparse.Namespace]
 
 
@@ -126,7 +126,7 @@ class ServiceResource(six.with_metaclass(CodingStyleMixin,
         if project_id:
             return project_id == self.cleanup_project_id
         else:
-            # Uncomment the following line once Shade and all OpenStack
+            # Uncomment the following line once the SDK and all OpenStack
             # services returns the resource owner. In the mean time no need
             # to be worrying.
             # logging.warning("Can't determine owner of resource %s", resource)

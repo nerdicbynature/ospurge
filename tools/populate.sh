@@ -15,8 +15,8 @@
 # OS_PROJECT_NAME with various resources. The purpose is to test
 # ospurge.
 
-# Be strict
-set -ueo pipefail
+# Be strict but don't exit automatically on error (exit_on_failure handles that)
+set -uo pipefail
 
 function exit_on_failure {
     RET_CODE=$?

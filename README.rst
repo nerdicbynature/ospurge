@@ -293,7 +293,7 @@ How to contribute
 -----------------
 
 OSPurge is hosted on the OpenStack infrastructure and is using
-`Gerrit <https://review.openstack.org/#/q/project:openstack/ospurge>`_ to
+`Gerrit <https://review.opendev.org/#/q/project:x/ospurge>`_ to
 manage contributions. You can contribute to the project by following the
 `OpenStack Development workflow <http://docs.openstack.org/infra/manual/developers.html#development-workflow>`_.
 
@@ -301,21 +301,19 @@ Start hacking right away with:
 
 .. code-block:: console
 
-   $ git clone https://git.openstack.org/openstack/ospurge
+   $ git clone https://opendev.org/x/ospurge
 
 
 Design decisions
 ----------------
-* OSPurge depends on `os-client-config`_ to manage authentication. This way,
+* OSPurge depends on `openstacksdk`_ to manage authentication. This way,
   environment variables (OS_*) and CLI options are properly handled.
 
-* OSPurge is built on top of `shade`_. shade is a simple client library for
-  interacting with OpenStack clouds. With shade, OSPurge can focus on the
+* OSPurge is built on top of `openstacksdk`_. OpenstackSDK is a client library
+  for interacting with OpenStack clouds. With the SDK, OSPurge can focus on the
   cleaning resources logic and not on properly building the various Python
   OpenStack clients and dealing with their not-so-intuitive API.
 
-.. _shade: https://github.com/openstack-infra/shade/
-.. _os-client-config: https://github.com/openstack/os-client-config
-
+.. _openstacksdk: https://github.com/openstack/openstacksdk
 
 

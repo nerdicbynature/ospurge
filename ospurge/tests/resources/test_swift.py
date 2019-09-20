@@ -11,9 +11,8 @@
 #  under the License.
 import unittest
 
+import openstack.connection
 from six.moves import urllib_parse
-
-import shade
 
 from ospurge.resources import swift
 from ospurge.tests import mock
@@ -21,7 +20,7 @@ from ospurge.tests import mock
 
 class TestListObjectsMixin(unittest.TestCase):
     def setUp(self):
-        self.cloud = mock.Mock(spec_set=shade.openstackcloud.OpenStackCloud)
+        self.cloud = mock.Mock(spec_set=openstack.connection.Connection)
         self.obj_lister = swift.ListObjectsMixin()
         self.obj_lister.cloud = self.cloud
 
@@ -48,7 +47,7 @@ class TestListObjectsMixin(unittest.TestCase):
 
 class TestObjects(unittest.TestCase):
     def setUp(self):
-        self.cloud = mock.Mock(spec_set=shade.openstackcloud.OpenStackCloud)
+        self.cloud = mock.Mock(spec_set=openstack.connection.Connection)
         self.creds_manager = mock.Mock(cloud=self.cloud)
 
     def test_check_prerequisite(self):
@@ -98,7 +97,7 @@ class TestObjects(unittest.TestCase):
 
 class TestContainers(unittest.TestCase):
     def setUp(self):
-        self.cloud = mock.Mock(spec_set=shade.openstackcloud.OpenStackCloud)
+        self.cloud = mock.Mock(spec_set=openstack.connection.Connection)
         self.creds_manager = mock.Mock(cloud=self.cloud)
 
     @mock.patch('ospurge.resources.swift.ListObjectsMixin.list_objects')

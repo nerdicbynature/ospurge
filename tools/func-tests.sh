@@ -110,7 +110,7 @@ for i in ${!pid[@]}; do
     unset "pid[$i]"
 done
 
-
+echo "Done populating. Moving on to cleanup."
 
 ########################
 ### Cleanup
@@ -127,6 +127,9 @@ assert_compute && assert_network && assert_volume
 
 tox -e run -- \
     --os-auth-url http://localhost/identity \
+    --os-cacert /opt/stack/data/ca-bundle.pem \
+    --os-identity-api-version 3 \
+    --os-region-name $OS_REGION_NAME \
     --os-username demo --os-project-name invisible_to_admin \
     --os-password $invisible_to_admin_demo_pass \
     --os-domain-id=$OS_PROJECT_DOMAIN_ID \

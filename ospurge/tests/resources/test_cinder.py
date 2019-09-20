@@ -11,7 +11,7 @@
 #  under the License.
 import unittest
 
-import shade
+import openstack.connection
 
 from ospurge.resources import cinder
 from ospurge.tests import mock
@@ -19,7 +19,7 @@ from ospurge.tests import mock
 
 class TestBackups(unittest.TestCase):
     def setUp(self):
-        self.cloud = mock.Mock(spec_set=shade.openstackcloud.OpenStackCloud)
+        self.cloud = mock.Mock(spec_set=openstack.connection.Connection)
         self.creds_manager = mock.Mock(cloud=self.cloud)
 
     def test_list(self):
@@ -40,7 +40,7 @@ class TestBackups(unittest.TestCase):
 
 class TestSnapshots(unittest.TestCase):
     def setUp(self):
-        self.cloud = mock.Mock(spec_set=shade.openstackcloud.OpenStackCloud)
+        self.cloud = mock.Mock(spec_set=openstack.connection.Connection)
         self.creds_manager = mock.Mock(cloud=self.cloud)
 
     def test_list(self):
@@ -63,7 +63,7 @@ class TestSnapshots(unittest.TestCase):
 
 class TestVolumes(unittest.TestCase):
     def setUp(self):
-        self.cloud = mock.Mock(spec_set=shade.openstackcloud.OpenStackCloud)
+        self.cloud = mock.Mock(spec_set=openstack.connection.Connection)
         self.creds_manager = mock.Mock(cloud=self.cloud, project_id=42)
 
     def test_check_prerequisite(self):

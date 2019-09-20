@@ -11,7 +11,7 @@
 #  under the License.
 import unittest
 
-import shade
+import openstack.connection
 
 from ospurge.resources import nova
 from ospurge.tests import mock
@@ -19,7 +19,7 @@ from ospurge.tests import mock
 
 class TestServers(unittest.TestCase):
     def setUp(self):
-        self.cloud = mock.Mock(spec_set=shade.openstackcloud.OpenStackCloud)
+        self.cloud = mock.Mock(spec_set=openstack.connection.Connection)
         self.creds_manager = mock.Mock(cloud=self.cloud)
 
     def test_list(self):

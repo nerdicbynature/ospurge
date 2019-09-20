@@ -11,7 +11,7 @@
 #  under the License.
 import unittest
 
-import shade
+import openstack.connection
 
 from ospurge.resources import glance
 from ospurge.tests import mock
@@ -19,7 +19,7 @@ from ospurge.tests import mock
 
 class TestListImagesMixin(unittest.TestCase):
     def setUp(self):
-        self.cloud = mock.Mock(spec_set=shade.openstackcloud.OpenStackCloud)
+        self.cloud = mock.Mock(spec_set=openstack.connection.Connection)
         self.img_lister = glance.ListImagesMixin()
         self.img_lister.cloud = self.cloud
         self.img_lister.cleanup_project_id = 42
@@ -53,7 +53,7 @@ class TestListImagesMixin(unittest.TestCase):
 
 class TestImages(unittest.TestCase):
     def setUp(self):
-        self.cloud = mock.Mock(spec_set=shade.openstackcloud.OpenStackCloud)
+        self.cloud = mock.Mock(spec_set=openstack.connection.Connection)
         self.creds_manager = mock.Mock(cloud=self.cloud, project_id=42)
 
     @mock.patch.object(glance.ListImagesMixin, 'list_images_by_owner')
