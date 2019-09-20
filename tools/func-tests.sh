@@ -82,7 +82,8 @@ if [[ ! "$(openstack flavor list)" =~ 'm1.nano' ]]; then
     openstack flavor create --id 42 --ram 64 --disk 1 --vcpus 1 m1.nano
 fi
 
-
+# Allow demo/invisible_to_admin to access the load-balancer service
+openstack role add --user demo --project invisible_to_admin load-balancer_member
 
 ########################
 ### Populate
@@ -173,5 +174,10 @@ fi
 
 if [[ $(openstack zone list --all-projects | wc -l) -ne 1 ]]; then  # This also checks FIP
     echo "Not all zones were cleaned up"
+    exit 1
+fi
+
+if [[ $(openstack loadbalancer list | wc -l) -ne 1 ]]; then
+    echo "Not all loadbalancers were cleaned up"
     exit 1
 fi
