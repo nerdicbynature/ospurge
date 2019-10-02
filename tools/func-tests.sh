@@ -12,7 +12,10 @@
 #  under the License.
 
 # Be strict (but not too much: '-u' doesn't always play nice with devstack)
-set -eo pipefail
+set -xeo pipefail
+
+# Set this so -x doesn't spam warnings
+RC_DIR=$(cd $(dirname "${BASH_SOURCE:-$0}") && pwd)
 
 readonly PROGDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -153,8 +156,9 @@ if [[ ! "$(openstack flavor list)" =~ 'm1.nano' ]]; then
     openstack flavor create --id 42 --ram 64 --disk 1 --vcpus 1 m1.nano
 fi
 
-# Allow demo/invisible_to_admin to access the load-balancer service
+# Allow additional test user/projects access the load-balancer service
 openstack role add --user demo --project invisible_to_admin load-balancer_member
+openstack role add --user alt_demo --project alt_demo load-balancer_member
 
 ########################
 ### Populate
@@ -170,8 +174,8 @@ pid+=($!)
 (source $DEVSTACK_DIR/openrc demo invisible_to_admin && ${PROGDIR}/populate.sh) &
 pid+=($!)
 
-#(source $DEVSTACK_DIR/openrc alt_demo alt_demo && ${PROGDIR}/populate.sh) &
-#pid+=($!)
+(source $DEVSTACK_DIR/openrc alt_demo alt_demo && ${PROGDIR}/populate.sh) &
+pid+=($!)
 
 for i in ${!pid[@]}; do
     wait ${pid[i]}
@@ -215,18 +219,30 @@ tox -e run -- \
     --os-cacert /opt/stack/data/ca-bundle.pem \
     --os-identity-api-version 3 \
     --os-region-name $OS_REGION_NAME \
-    --os-username demo --os-project-name invisible_to_admin \
+    --os-username demo \
+    --os-project-name invisible_to_admin \
     --os-password $invisible_to_admin_demo_pass \
-    --os-domain-id=$OS_PROJECT_DOMAIN_ID \
-    --purge-own-project --verbose
+    --os-domain-id $OS_PROJECT_DOMAIN_ID \
+    --purge-own-project \
+    --verbose
 
-#source $DEVSTACK_DIR/openrc alt_demo alt_demo
-#assert_compute && assert_network && assert_volume
+source $DEVSTACK_DIR/openrc alt_demo alt_demo
+assert_compute && assert_network && assert_volume
 
 source $DEVSTACK_DIR/openrc admin admin
-#openstack project set --disable alt_demo
-#tox -e run -- --os-auth-url http://localhost/identity --os-username admin --os-project-name admin --os-password $admin_admin_pass --purge-project alt_demo --verbose
-#openstack project set --enable alt_demo
+openstack project set --disable alt_demo
+tox -e run -- \
+    --os-auth-url http://localhost/identity \
+    --os-cacert /opt/stack/data/ca-bundle.pem \
+    --os-identity-api-version 3 \
+    --os-region-name $OS_REGION_NAME \
+    --os-username admin \
+    --os-project-name admin \
+    --os-password $admin_admin_pass \
+    --os-domain-id $OS_PROJECT_DOMAIN_ID \
+    --purge-project alt_demo \
+    --verbose
+openstack project set --enable alt_demo
 
 
 

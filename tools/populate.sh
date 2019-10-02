@@ -16,7 +16,10 @@
 # ospurge.
 
 # Be strict but don't exit automatically on error (exit_on_failure handles that)
-set -uo pipefail
+set -xuo pipefail
+
+# Set this so -x doesn't spam warnings
+RC_DIR=$(cd $(dirname "${BASH_SOURCE:-$0}") && pwd)
 
 function exit_on_failure {
     RET_CODE=$?
@@ -75,8 +78,8 @@ function wait_for_lb_active {
 # Some random UUID
 # Commented to workaround a nova #1730756 with non-ASCII VM name:
 # https://bugs.launchpad.net/nova/+bug/1730756
-#UUID="♫$(cat /proc/sys/kernel/random/uuid)✓"
-UUID="$(cat /proc/sys/kernel/random/uuid)"
+ASCII_UUID="$(cat /proc/sys/kernel/random/uuid)"
+UUID="♫${ASCII_UUID}✓"
 # Name of external network
 EXTNET_NAME=${EXTNET_NAME:-public}
 # Name of flavor used to spawn a VM
@@ -84,7 +87,7 @@ FLAVOR=${FLAVOR:-m1.nano}
 # Image used for the VM
 VMIMG_NAME=${VMIMG_NAME:-cirros-0.4.0-x86_64-disk}
 # Zone name used for the Designate Zone
-ZONE_NAME="${UUID//-/}.com."
+ZONE_NAME="${ASCII_UUID//-/}.com."
 # LoadBalancer name used for the Octavia LoadBalancer
 LB_NAME="lb-${UUID//-/}"
 LB_LISTENER_NAME="listener-${UUID//-/}"
