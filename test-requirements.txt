@@ -7,6 +7,7 @@ sphinx>=1.6.2 # BSD
 testrepository>=0.0.18  # Apache-2.0/BSD
 python-openstackclient>=3.16.1
 python-designateclient
+python-octaviaclient
 
 # Python 2.7 dependencies
 mock; python_version < '3.0'

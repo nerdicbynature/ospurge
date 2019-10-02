@@ -7,13 +7,33 @@
       - x/ospurge
       - openstack/designate
       - openstack/python-designateclient
+      - openstack/octavia
+      - openstack/octavia-lib
+      - openstack/python-octaviaclient
     roles:
       - zuul: openstack-infra/devstack
     vars:
         devstack_plugins:
             designate: https://opendev.org/openstack/designate
+            octavia: https://opendev.org/openstack/octavia
         devstack_localrc:
             DESIGNATE_SERVICE_PORT_DNS: 5322
+            DISABLE_AMP_IMAGE_BUILD: True
+        devstack_local_conf:
+            post-config:
+                $OCTAVIA_CONF:
+                    controller_worker:
+                        amphora_driver: amphora_noop_driver
+                        compute_driver: compute_noop_driver
+                        network_driver: network_noop_driver
+                    certificates:
+                        cert_manager: local_cert_manager
+        devstack_services:
+            octavia: true
+            o-api: true
+            o-cw: true
+            o-hm: false
+            o-hk: false
         tox_envlist: functional
     irrelevant-files: &dsvm-irrelevant-files
       - ^(test-|)requirements.txt$
