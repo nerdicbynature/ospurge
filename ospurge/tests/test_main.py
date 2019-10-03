@@ -225,6 +225,10 @@ class TestCredentialsManager(unittest.TestCase):
             creds_manager.cloud.current_project_id,
             creds_manager.project_id
         )
+        self.assertEqual(
+            creds_manager.cloud.current_project.name,
+            creds_manager.project_name
+        )
 
     def test_init_with_purge_project(self, m_conn, m_osc):
         _config = m_osc.OpenStackConfig()
@@ -246,12 +250,16 @@ class TestCredentialsManager(unittest.TestCase):
         )
 
         self.assertEqual(
-            creds_manager.cloud.current_user_id,
+            creds_manager.admin_cloud.current_user_id,
             creds_manager.user_id
         )
         self.assertEqual(
-            creds_manager.cloud.current_project_id,
+            creds_manager.admin_cloud.get_project().id,
             creds_manager.project_id
+        )
+        self.assertEqual(
+            creds_manager.admin_cloud.get_project().name,
+            creds_manager.project_name
         )
         self.assertFalse(creds_manager.disable_project_after_purge)
 

@@ -19,7 +19,7 @@ class LoadBalancers(base.ServiceResource):
         if not self.cloud.has_service('load-balancer'):
             return []
         return self.cloud.load_balancer.load_balancers(
-            project_id=self.cloud.current_project_id)
+            project_id=self.cleanup_project_id)
 
     def delete(self, resource):
         self.cloud.load_balancer.delete_load_balancer(
