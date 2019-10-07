@@ -21,6 +21,9 @@ class Servers(base.ServiceResource):
     def delete(self, resource):
         self.cloud.delete_server(resource['id'])
 
+    def disable(self, resource):
+        self.cloud.compute.stop_server(resource['id'])
+
     @staticmethod
     def to_str(resource):
         return "VM (id='{}', name='{}')".format(

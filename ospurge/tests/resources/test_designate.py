@@ -38,6 +38,11 @@ class TestZones(unittest.TestCase):
         self.assertIsNone(designate.Zones(self.creds_manager).delete(zone))
         self.cloud.delete_zone.assert_called_once_with(zone['id'])
 
+    def test_disable(self):
+        zone = mock.MagicMock()
+        with self.assertLogs(level='WARNING'):
+            designate.Zones(self.creds_manager).disable(zone)
+
     def test_to_string(self):
         stack = mock.MagicMock()
         self.assertIn("Designate Zone",

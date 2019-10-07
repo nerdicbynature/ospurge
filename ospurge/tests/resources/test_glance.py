@@ -79,6 +79,13 @@ class TestImages(unittest.TestCase):
         self.assertIsNone(glance.Images(self.creds_manager).delete(image))
         self.cloud.delete_image.assert_called_once_with(image['id'])
 
+    def test_disable(self):
+        image = mock.MagicMock()
+        self.assertIsNone(glance.Images(self.creds_manager).disable(image))
+        self.cloud.image.deactivate_image.assert_called_once_with(
+            image['id']
+        )
+
     def test_to_string(self):
         image = mock.MagicMock()
         self.assertIn("Image (",

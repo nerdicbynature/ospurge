@@ -25,6 +25,12 @@ class LoadBalancers(base.ServiceResource):
         self.cloud.load_balancer.delete_load_balancer(
             resource['id'], cascade=True)
 
+    def disable(self, resource):
+        self.cloud.load_balancer.update_load_balancer(
+            resource['id'],
+            admin_state_up=False
+        )
+
     @staticmethod
     def to_str(resource):
         return "Octavia LoadBalancer (id='{}', name='{}')".format(

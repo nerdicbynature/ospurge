@@ -72,6 +72,77 @@ function assert_volume {
     fi
 }
 
+########################
+# Disable asserts
+########################
+function test_neutron_disable {
+    if [[ $(openstack port list -c Status -f value --device-owner compute:nova --project $demo_project_id | grep -ic 'active' ) -gt 0 ]]; then
+        echo "Some of the ports is not disabled yet :)"
+        exit 1
+    fi
+    if [[ $(openstack port list -c Status -f value --device-owner  ''  --project $demo_project_id | grep -ic 'active' ) -gt 0 ]]; then
+        echo "Some of the ports is not disabled yet :)"
+        exit 1
+    fi
+    if [[ $(openstack network list --no-share --long -c State -f value --project $demo_project_id | grep -ic 'UP' ) -gt 0 ]]; then
+        echo "Some of the networks is not disabled yet :)"
+        exit 1
+    fi
+    for router in $(openstack router list -c ID -f value --project $demo_project_id); do
+        if [[ $(openstack router show $router -c admin_state_up -f value | grep -ic 'true' ) -gt 0 ]]; then
+            echo "Some of the routers is not disabled yet :)"
+            exit 1
+        fi
+    done
+}
+
+
+function test_cinder_disable {
+    if [[ $(openstack volume list --long -c Properties -f value | grep -qvi 'readonly') ]]; then
+        echo "Cinder volume is not disabled :)"
+        exit 1
+    fi
+}
+
+
+function test_glance_disable {
+    if [[ $(openstack image list --long -c Project -c Status -f value| grep $demo_project_id | grep -ic 'active' ) -gt 0 ]]; then
+        echo "Some of the images is not disabled yet :)"
+        exit 1
+    fi
+}
+
+
+function test_nova_disable {
+    if [[ $(openstack server list -c Status -f value | grep -ic 'active' ) -gt 0 ]]; then
+        echo "Some of the servers is not disabled yet :)"
+        exit 1
+    fi
+}
+
+
+function test_loadbalancer_disable {
+    for loadbalancer in $(openstack loadbalancer list -c id -f value --project $demo_project_id); do
+        if [[ $(openstack loadbalancer show $loadbalancer -c admin_state_up -f value | grep -ic 'true' ) -gt 0 ]]; then
+            echo "Some of the loadbalancers is not disabled yet :)"
+            exit 1
+        fi
+    done
+}
+
+
+function test_swift_disable {
+    for container in $(openstack container list -c Name -f value); do
+        if [[ $(openstack container show $container -f json |  grep -iq 'read[-_]acl:.*' ) ]]; then
+            echo "Some of the containers  is not disabled yet :)"
+            exit 1
+        fi
+        if [[ $(openstack container show $container -f json |  grep -iq 'write[-_]acl:.*' ) ]]; then
+            echo "Some of the containers is not disabled yet :)"
+            exit 1
+        fi
+    done
+}
 
 
 ########################
@@ -114,8 +185,21 @@ done
 echo "Done populating. Moving on to cleanup."
 
 ########################
+# Disable
+########################
+source $DEVSTACK_DIR/openrc admin admin
+demo_project_id=$(openstack project show demo -c id -f value | awk '{print $1}')
+source $DEVSTACK_DIR/openrc demo demo
+assert_compute && assert_network && assert_volume
+
+tox -e run -- --os-cloud devstack --purge-own-project --verbose --disable-only # disable demo/demo
+test_neutron_disable && test_cinder_disable && test_glance_disable \
+&& test_nova_disable && test_loadbalancer_disable && test_swift_disable
+
+########################
 ### Cleanup
 ########################
+source $DEVSTACK_DIR/openrc admin admin
 tox -e run -- --os-cloud devstack-admin --purge-own-project --verbose # purges admin/admin
 
 source $DEVSTACK_DIR/openrc demo demo

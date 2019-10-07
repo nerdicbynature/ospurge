@@ -43,6 +43,9 @@ class Images(base.ServiceResource, ListImagesMixin):
     def delete(self, resource):
         self.cloud.delete_image(resource['id'])
 
+    def disable(self, resource):
+        self.cloud.image.deactivate_image(resource['id'])
+
     @staticmethod
     def to_str(resource):
         return "Image (id='{}', name='{}')".format(

@@ -27,6 +27,12 @@ class FloatingIPs(base.ServiceResource):
     def delete(self, resource):
         self.cloud.delete_floating_ip(resource['id'])
 
+    def disable(self, resource):
+        self.cloud.network.update_ip(
+            resource['id'],
+            port_id=None,
+        )
+
     @staticmethod
     def to_str(resource):
         return "Floating IP (id='{}')".format(resource['id'])
@@ -76,6 +82,12 @@ class Routers(base.ServiceResource):
     def delete(self, resource):
         self.cloud.delete_router(resource['id'])
 
+    def disable(self, resource):
+        self.cloud.update_router(
+            resource['id'],
+            admin_state_up=False
+        )
+
     @staticmethod
     def to_str(resource):
         return "Router (id='{}', name='{}')".format(
@@ -96,6 +108,9 @@ class Ports(base.ServiceResource):
 
     def delete(self, resource):
         self.cloud.delete_port(resource['id'])
+
+    def disable(self, resource):
+        self.cloud.update_port(resource['id'], admin_state_up=False)
 
     @staticmethod
     def to_str(resource):
@@ -127,6 +142,9 @@ class Networks(base.ServiceResource):
 
     def delete(self, resource):
         self.cloud.delete_network(resource['id'])
+
+    def disable(self, resource):
+        self.cloud.update_network(resource['id'], admin_state_up=False)
 
     @staticmethod
     def to_str(resource):

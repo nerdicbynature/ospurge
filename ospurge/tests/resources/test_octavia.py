@@ -44,6 +44,13 @@ class TestLoadBalancers(unittest.TestCase):
         (self.cloud.load_balancer.delete_load_balancer
          .assert_called_once_with(lb['id'], cascade=True))
 
+    def test_disable(self):
+        lb = mock.MagicMock()
+        self.assertIsNone(octavia.LoadBalancers(self.creds_manager).disable(
+            lb))
+        (self.cloud.load_balancer.update_load_balancer
+         .assert_called_once_with(lb['id'], admin_state_up=False))
+
     def test_to_string(self):
         stack = mock.MagicMock()
         self.assertIn("Octavia LoadBalancer",

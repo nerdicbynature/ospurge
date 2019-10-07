@@ -47,6 +47,14 @@ class TestFloatingIPs(unittest.TestCase):
         self.cloud.delete_floating_ip.assert_called_once_with(
             fip['id'])
 
+    def test_disable(self):
+        fip = mock.MagicMock()
+        self.assertIsNone(neutron.FloatingIPs(self.creds_manager).disable(
+            fip
+        ))
+        self.cloud.network.update_ip.assert_called_once_with(
+            fip['id'], port_id=None)
+
     def test_to_string(self):
         fip = mock.MagicMock()
         self.assertIn("Floating IP ",
@@ -93,6 +101,13 @@ class TestRouterInterfaces(unittest.TestCase):
             port_id=iface['id']
         )
 
+    def test_disable(self):
+        iface = mock.MagicMock()
+        with self.assertLogs(level='WARNING'):
+            neutron.RouterInterfaces(self.creds_manager).disable(
+                iface
+            )
+
     def test_to_string(self):
         iface = mock.MagicMock()
         self.assertIn(
@@ -131,6 +146,14 @@ class TestRouters(unittest.TestCase):
         self.assertIsNone(neutron.Routers(self.creds_manager).delete(router))
         self.cloud.delete_router.assert_called_once_with(router['id'])
 
+    def test_disable(self):
+        router = mock.MagicMock()
+        self.assertIsNone(neutron.Routers(self.creds_manager).disable(router))
+        self.cloud.update_router.assert_called_once_with(
+            router['id'],
+            admin_state_up=False
+        )
+
     def test_to_string(self):
         router = mock.MagicMock()
         self.assertIn("Router (",
@@ -158,6 +181,14 @@ class TestPorts(unittest.TestCase):
         port = mock.MagicMock()
         self.assertIsNone(neutron.Ports(self.creds_manager).delete(port))
         self.cloud.delete_port.assert_called_once_with(port['id'])
+
+    def test_disable(self):
+        port = mock.MagicMock()
+        self.assertIsNone(neutron.Ports(self.creds_manager).disable(port))
+        self.cloud.update_port.assert_called_once_with(
+            port['id'],
+            admin_state_up=False
+        )
 
     def test_to_string(self):
         port = mock.MagicMock()
@@ -203,6 +234,14 @@ class TestNetworks(unittest.TestCase):
         self.assertIsNone(neutron.Networks(self.creds_manager).delete(nw))
         self.cloud.delete_network.assert_called_once_with(nw['id'])
 
+    def test_disable(self):
+        nw = mock.MagicMock()
+        self.assertIsNone(neutron.Networks(self.creds_manager).disable(nw))
+        self.cloud.update_network.assert_called_once_with(
+            nw['id'],
+            admin_state_up=False
+        )
+
     def test_to_string(self):
         nw = mock.MagicMock()
         self.assertIn("Network (",
@@ -229,6 +268,11 @@ class TestSecurityGroups(unittest.TestCase):
         self.assertIsNone(
             neutron.SecurityGroups(self.creds_manager).delete(sg))
         self.cloud.delete_security_group.assert_called_once_with(sg['id'])
+
+    def test_disable(self):
+        sg = mock.MagicMock()
+        with self.assertLogs(level='WARNING'):
+            neutron.SecurityGroups(self.creds_manager).disable(sg)
 
     def test_to_string(self):
         sg = mock.MagicMock()

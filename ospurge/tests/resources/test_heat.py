@@ -38,6 +38,11 @@ class TestStacks(unittest.TestCase):
         self.assertIsNone(heat.Stacks(self.creds_manager).delete(stack))
         self.cloud.delete_stack.assert_called_once_with(stack['id'], wait=True)
 
+    def test_disable(self):
+        stack = mock.MagicMock()
+        with self.assertLogs(level='WARNING'):
+            heat.Stacks(self.creds_manager).disable(stack)
+
     def test_to_string(self):
         stack = mock.MagicMock()
         self.assertIn("Heat Stack",

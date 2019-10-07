@@ -72,6 +72,11 @@ def create_argument_parser():
         "--os-identity-api-version", default=3,
         help="Identity API version, default=3"
     )
+    parser.add_argument(
+        "--disable-only", action="store_true",
+        help="Disable resources of the project rather than purging them. "
+             "Useful if you want to keep the resources but disable them."
+    )
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
@@ -164,7 +169,9 @@ class CredentialsManager(object):
 def runner(resource_mngr, options, exit):
     try:
 
-        if not (options.dry_run or options.resource):
+        if not (options.dry_run or
+                options.resource or
+                options.disable_only):
             resource_mngr.wait_for_check_prerequisite(exit)
 
         for resource in resource_mngr.list():
@@ -172,18 +179,27 @@ def runner(resource_mngr, options, exit):
             if exit.is_set():
                 return
 
-            if resource_mngr.should_delete(resource):
+            resource_func_to_call = None
+            if options.disable_only:
+                resource_func_to_call = resource_mngr.disable
+                logging.info("Going to disable resource %s",
+                             resource_mngr.to_str(resource))
+
+            elif resource_mngr.should_delete(resource):
+                resource_func_to_call = resource_mngr.delete
                 logging.info("Going to delete %s",
                              resource_mngr.to_str(resource))
 
-                # If we are in dry run mode, don't actually delete the resource
+            if resource_func_to_call:
+                # If we are in dry run mode, don't actually delete/disable
+                # the resource
                 if options.dry_run:
                     continue
 
-                # If we want to delete only specific resources, many things
-                # can go wrong, so we basically ignore all exceptions.
+                # If we want to delete/disable only specific resources, many
+                # things can go wrong, so we basically ignore all exceptions.
                 exc = os_exceptions.OpenStackCloudException
-                utils.call_and_ignore_exc(exc, resource_mngr.delete, resource)
+                utils.call_and_ignore_exc(exc, resource_func_to_call, resource)
 
     except Exception as exc:
         log = logging.error
