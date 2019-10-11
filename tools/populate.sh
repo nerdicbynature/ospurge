@@ -90,6 +90,11 @@ VMIMG_NAME=${VMIMG_NAME:-cirros-0.4.0-x86_64-disk}
 ZONE_NAME="${ASCII_UUID//-/}.com."
 # LoadBalancer name used for the Octavia LoadBalancer
 LB_NAME="lb-${UUID//-/}"
+# For senlin
+CL_NAME="cl-${ASCII_UUID//-/}"
+PR_NAME="pr-${ASCII_UUID//-/}"
+PL_NAME="pl-${ASCII_UUID//-/}"
+RC_NAME="rc-${ASCII_UUID//-/}"
 LB_LISTENER_NAME="listener-${UUID//-/}"
 # Subnet used for the Octavia LoadBalancer VIP
 LB_VIP_SUBNET_ID=${LB_VIP_SUBNET_ID:-$UUID}
@@ -213,6 +218,28 @@ swift upload ${UUID} ${UUID}.raw || true
 openstack zone create --email hostmaster@example.com ${ZONE_NAME}
 exit_on_failure "Unable to create Designate Zone ${ZONE_NAME}"
 
+
+###############################
+### Senlin
+###############################
+# Create a cluster
+IMAGE_NAME=$(openstack image list | awk "/ $VMIMG_NAME /{print \$4}")
+profile_spec="/tmp/profile_spec.yaml"
+policy_spec="/tmp/policy_spec.yaml"
+echo -e "type: senlin.policy.deletion\nversion: 1.0\ndescription: test " > $policy_spec
+echo -e "properties:\n  criteria: OLDEST_FIRST\n  destroy_after_deletion: True" >> $policy_spec
+echo -e "type: os.nova.server\nversion: 1.0\nproperties:\n  name: clustering-test" > $profile_spec
+echo -e "  flavor: $FLAVOR\n  image: "$IMAGE_NAME"\n  networks:\n   - network: $EXTNET_NAME" >> $profile_spec
+profile_status=$(openstack cluster profile create --spec-file $profile_spec $PR_NAME)
+exit_on_failure "Unable to create profile (${profile_status}) as $OS_USERNAME/$OS_PROJECT_NAME"
+policy_status=$(openstack cluster policy create --spec-file $policy_spec $PL_NAME)
+exit_on_failure "Unable to create policy (${policy_status}) as $OS_USERNAME/$OS_PROJECT_NAME"
+cluster_status=$(openstack cluster create --desired-capacity 1 --min-size 0 --max-size 1 --profile $PR_NAME $CL_NAME)
+exit_on_failure "Unable to create cluster (${cluster_status}) as $OS_USERNAME/$OS_PROJECT_NAME"
+attach_policy=$(openstack cluster policy attach --policy $PL_NAME $CL_NAME)
+exit_on_failure "Unable to attach policy to cluster (${attach_policy}) as $OS_USERNAME/$OS_PROJECT_NAME"
+attach_receiver=$(openstack cluster receiver create --cluster $CL_NAME --action CLUSTER_SCALE_OUT --type webhook $RC_NAME)
+exit_on_failure "Unable to attach receiver to cluster (${attach_receiver}) as $OS_USERNAME/$OS_PROJECT_NAME"
 
 ###############################
 ### Octavia

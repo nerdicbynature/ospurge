@@ -6,12 +6,14 @@
       # Additional supported projects
       - openstack/designate
       - openstack/octavia
+      - openstack/senlin
     roles:
       - zuul: openstack-infra/devstack
     vars:
         devstack_plugins:
             designate: https://opendev.org/openstack/designate
             octavia: https://opendev.org/openstack/octavia
+            senlin: https://opendev.org/openstack/senlin
         devstack_localrc:
             DISABLE_AMP_IMAGE_BUILD: True
         devstack_local_conf:
@@ -25,6 +27,7 @@
                         cert_manager: local_cert_manager
         devstack_services:
             octavia: true
+            senlin: true
             o-api: true
             o-cw: true
             o-hm: false

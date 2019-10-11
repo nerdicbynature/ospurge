@@ -147,6 +147,18 @@ function test_swift_disable {
     done
 }
 
+function test_senlin_disable {
+    for cluster in $(openstack cluster list -c id -f value); do
+        if [[ $(openstack cluster policy binding list $cluster -c is_enabled -f value | grep -ic 'true') -gt 0 ]]; then
+            echo "Some of the policies is not disabled yet :)"
+            exit 1
+        fi
+        if [[ $(openstack cluster show $cluster -c desired_capacity -f value) -ne 0 ]]; then
+            echo "Some of the clusters is not disabled yet :)"
+            exit 1
+        fi
+    done
+}
 
 ########################
 ### Pre check
@@ -198,8 +210,8 @@ assert_compute && assert_network && assert_volume
 
 tox -e run -- --os-cloud devstack --purge-own-project --verbose --disable-only # disable demo/demo
 test_neutron_disable && test_cinder_disable && test_glance_disable \
-&& test_nova_disable && test_loadbalancer_disable && test_swift_disable
-
+&& test_nova_disable && test_loadbalancer_disable && test_swift_disable \
+&& test_senlin_disable
 ########################
 ### Cleanup
 ########################
@@ -279,5 +291,25 @@ fi
 
 if [[ $(openstack loadbalancer list | wc -l) -ne 1 ]]; then
     echo "Not all loadbalancers were cleaned up"
+    exit 1
+fi
+
+if [[ $(openstack cluster list | wc -l) -ne 1 ]]; then
+    echo "Not all clusters were cleaned up"
+    exit 1
+fi
+
+if [[ $(openstack cluster profile list | wc -l) -ne 1 ]]; then
+    echo "Not all profiles were cleaned up"
+    exit 1
+fi
+
+if [[ $(openstack cluster policy list | wc -l) -ne 1 ]]; then
+    echo "Not all policies were cleaned up"
+    exit 1
+fi
+
+if [[ $(openstack cluster receiver list | wc -l) -ne 1 ]]; then
+    echo "Not all Receivers were cleaned up"
     exit 1
 fi
