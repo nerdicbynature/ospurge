@@ -31,7 +31,7 @@ class TestLoadBalancers(unittest.TestCase):
     def test_list_with_service(self):
         self.cloud.has_service.return_value = True
         my_project = str(uuid.uuid4())
-        self.cloud.current_project_id = my_project
+        self.creds_manager.project_id = my_project
         self.assertIs(
             self.cloud.load_balancer.load_balancers.return_value,
             octavia.LoadBalancers(self.creds_manager).list())

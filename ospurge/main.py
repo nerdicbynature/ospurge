@@ -98,31 +98,35 @@ class CredentialsManager(object):
         self.cloud = connection.Connection(
             config=config.get_one(argparse=options)
         )
+        self.user_id = self.cloud.current_user_id
+        self.project_id = self.cloud.current_project_id
+        self.project_name = self.cloud.current_project.name
+
         self.admin_cloud = None  # type: Optional[connection.Connection]
 
         if not options.purge_own_project:
             try:
-                # Only admins can do that.
+                # Only admins can do this:
                 project = self.cloud.get_project(options.purge_project)
                 if not project:
-                    raise os_exceptions.SDKException()
-                # If project is not enabled, we must disable it after purge.
-                self.disable_project_after_purge = not project.is_enabled
-            except os_exceptions.SDKException:
+                    raise os_exceptions.OpenStackCloudException()
+            except os_exceptions.OpenStackCloudException:
                 raise exceptions.OSProjectNotFound(
                     "Unable to find project '{}'".format(options.purge_project)
                 )
+            # If project is not enabled, we must disable it after purge.
+            self.project_id = project.id
+            self.project_name = project.name
+            self.disable_project_after_purge = not project.is_enabled
+
             self.admin_cloud = self.cloud
             self.cloud = self.admin_cloud.connect_as_project(
                 options.purge_project)
 
-        self.user_id = self.cloud.current_user_id
-        self.project_id = self.cloud.current_project_id
-
         logging.warning(
             "Going to list and/or delete resources from project '%s'",
-            options.purge_project or self.cloud.current_project.name
-            or self.cloud.current_project_id
+            options.purge_project or self.project_name
+            or self.project_id
         )
 
     def ensure_role_on_project(self):
