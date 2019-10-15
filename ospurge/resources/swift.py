@@ -62,6 +62,14 @@ class Containers(base.ServiceResource, ListObjectsMixin):
     def delete(self, resource):
         self.cloud.delete_container(urllib_parse.quote(resource['name']))
 
+    def disable(self, resource):
+        # There is no disable for the swift container just removing the
+        # write/read access to the conatianer, so only admin can access
+        self.cloud.object_store.set_container_metadata(
+            urllib_parse.quote(resource['name']),
+            write_acl=None, read_acl=None
+        )
+
     @staticmethod
     def to_str(resource):
         return "Container (name='{}')".format(resource['name'])

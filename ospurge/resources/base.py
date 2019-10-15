@@ -136,6 +136,14 @@ class ServiceResource(six.with_metaclass(CodingStyleMixin,
     def delete(self, resource):
         raise NotImplementedError
 
+    def disable(self, resource):
+        msg = "The disable feature is not supported for %s, No action will" \
+              "be taken against the resource(id=%s, name=%s)."
+        logging.warning(
+            msg, self.__class__.__name__,
+            resource.get('id'), resource.get('name')
+        )
+
     @staticmethod
     @abc.abstractmethod
     def to_str(resource):

@@ -32,6 +32,11 @@ class TestServers(unittest.TestCase):
         self.assertIsNone(nova.Servers(self.creds_manager).delete(server))
         self.cloud.delete_server.assert_called_once_with(server['id'])
 
+    def test_disable(self):
+        server = mock.MagicMock()
+        self.assertIsNone(nova.Servers(self.creds_manager).disable(server))
+        self.cloud.compute.stop_server.assert_called_once_with(server['id'])
+
     def test_to_string(self):
         server = mock.MagicMock()
         self.assertIn("VM (",

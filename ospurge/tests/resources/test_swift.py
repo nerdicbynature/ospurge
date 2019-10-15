@@ -89,6 +89,11 @@ class TestObjects(unittest.TestCase):
                 urllib_parse.quote(obj['name'])
             )
 
+    def test_disable(self):
+        obj = {'name': 'toto', 'container_name': 'foo'}
+        with self.assertLogs(level='WARNING'):
+            swift.Objects(self.creds_manager).disable(obj)
+
     def test_to_string(self):
         obj = mock.MagicMock()
         self.assertIn("Object '",
@@ -126,6 +131,17 @@ class TestContainers(unittest.TestCase):
         self.assertIsNone(swift.Containers(self.creds_manager).delete(cont))
         self.cloud.delete_container.assert_called_once_with(
             urllib_parse.quote(cont['name'])
+        )
+
+    def test_disable(self):
+        cont = {'bytes': 8,
+                'count': 2,
+                'last_modified': '2019-06-05T15:20:59.450120',
+                'name': 'Pouet éêù #'}
+        self.assertIsNone(swift.Containers(self.creds_manager).disable(cont))
+        self.cloud.object_store.set_container_metadata.assert_called_once_with(
+            urllib_parse.quote(cont['name']),
+            read_acl=None, write_acl=None
         )
 
     def test_to_string(self):

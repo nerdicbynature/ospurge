@@ -74,10 +74,10 @@ class TestFunctions(unittest.TestCase):
         self.assertEqual('foo', options.purge_project)
         self.assertEqual(['Networks', 'Volumes'], options.resource)
 
-    def test_runner(self):
+    def test_runner_delete(self):
         resources = [mock.Mock(), mock.Mock(), mock.Mock()]
         resource_manager = mock.Mock(list=mock.Mock(return_value=resources))
-        options = mock.Mock(dry_run=False, resource=False)
+        options = mock.Mock(dry_run=False, resource=False, disable_only=False)
         exit = mock.Mock(is_set=mock.Mock(side_effect=[False, False, True]))
 
         main.runner(resource_manager, options, exit)
@@ -95,10 +95,43 @@ class TestFunctions(unittest.TestCase):
             resource_manager.delete.call_args_list
         )
 
-    def test_runner_dry_run(self):
+    def test_runner_disable(self):
+        resources = [mock.Mock(), mock.Mock(), mock.Mock()]
+        resource_manager = mock.Mock(list=mock.Mock(return_value=resources))
+        options = mock.Mock(dry_run=False, resource=False, disable_only=True)
+        exit = mock.Mock(is_set=mock.Mock(side_effect=[False, False, True]))
+
+        main.runner(resource_manager, options, exit)
+
+        resource_manager.list.assert_called_once_with()
+        resource_manager.wait_for_check_prerequisite.assert_not_called()
+        resource_manager.should_delete.assert_not_called()
+        resource_manager.delete.assert_not_called()
+        self.assertEqual(2, resource_manager.disable.call_count)
+        self.assertEqual(
+            [mock.call(resources[0]), mock.call(resources[1])],
+            resource_manager.disable.call_args_list
+        )
+
+    def test_runner_disable_dry_run(self):
+        resources = [mock.Mock(), mock.Mock(), mock.Mock()]
+        resource_manager = mock.Mock(list=mock.Mock(return_value=resources))
+        options = mock.Mock(dry_run=True, resource=False, disable_only=True)
+        exit = mock.Mock(is_set=mock.Mock(side_effect=[False, False, True]))
+
+        main.runner(resource_manager, options, exit)
+
+        resource_manager.list.assert_called_once_with()
+        resource_manager.wait_for_check_prerequisite.assert_not_called()
+        resource_manager.should_delete.assert_not_called()
+        resource_manager.delete.assert_not_called()
+        resource_manager.disable.assert_not_called()
+        resource_manager.assert_not_called()
+
+    def test_runner_delete_dry_run(self):
         resources = [mock.Mock(), mock.Mock()]
         resource_manager = mock.Mock(list=mock.Mock(return_value=resources))
-        options = mock.Mock(dry_run=True)
+        options = mock.Mock(dry_run=True, disable_only=False)
         exit = mock.Mock(is_set=mock.Mock(return_value=False))
 
         main.runner(resource_manager, options, exit)
@@ -109,7 +142,7 @@ class TestFunctions(unittest.TestCase):
     def test_runner_resource(self):
         resources = [mock.Mock()]
         resource_manager = mock.Mock(list=mock.Mock(return_value=resources))
-        options = mock.Mock(dry_run=False, resource=True)
+        options = mock.Mock(dry_run=False, resource=True, disable_only=False)
         exit = mock.Mock(is_set=mock.Mock(return_value=False))
         main.runner(resource_manager, options, exit)
         resource_manager.wait_for_check_prerequisite.assert_not_called()

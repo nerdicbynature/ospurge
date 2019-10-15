@@ -59,6 +59,14 @@ class Volumes(base.ServiceResource):
     def delete(self, resource):
         self.cloud.delete_volume(resource['id'])
 
+    def disable(self, resource):
+        # Since there is no disable for volume setting it to readonly
+        # is good enough so no update on it
+        self.cloud.update_volume(
+            resource['id'],
+            metadata={'readonly': 'true'}
+        )
+
     @staticmethod
     def to_str(resource):
         return "Volume (id='{}', name='{}')".format(

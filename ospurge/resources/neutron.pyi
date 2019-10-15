@@ -26,6 +26,9 @@ class FloatingIPs(base.ServiceResource):
     def delete(self, resource: Dict[str, Any]) -> None:
         ...
 
+    def disable(self, resource: Dict[str, Any]) -> None:
+        ...
+
     @staticmethod
     def to_str(resource: Dict[str, Any]) -> str:
         ...
@@ -56,6 +59,9 @@ class Routers(base.ServiceResource):
     def delete(self, resource: Dict[str, Any]) -> None:
         ...
 
+    def disable(self, resource: Dict[str, Any]) -> None:
+        ...
+
     @staticmethod
     def to_str(resource: Dict[str, Any]) -> str:
         ...
@@ -66,6 +72,9 @@ class Ports(base.ServiceResource):
         ...
 
     def delete(self, resource: Dict[str, Any]) -> None:
+        ...
+
+    def disable(self, resource: Dict[str, Any]) -> None:
         ...
 
     @staticmethod
@@ -81,6 +90,9 @@ class Networks(base.ServiceResource):
         ...
 
     def delete(self, resource: Dict[str, Any]) -> None:
+        ...
+
+    def disable(self, resource: Dict[str, Any]) -> None:
         ...
 
     @staticmethod
