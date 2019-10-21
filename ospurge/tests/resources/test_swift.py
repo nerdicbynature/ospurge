@@ -12,7 +12,6 @@
 import unittest
 
 import openstack.connection
-from six.moves import urllib_parse
 
 from ospurge.resources import swift
 from ospurge.tests import mock
@@ -79,14 +78,15 @@ class TestObjects(unittest.TestCase):
     def test_delete(self):
         objects = [
             {'name': 'toto', 'container_name': 'foo'},
-            {'name': 'tata%20foo', 'container_name': 'baz%20bar'},
+            {'name': 'tata foo', 'container_name': 'baz bar'},
             {'name': 'titi#1', 'container_name': 'bar#2'},
+            {'name': 'hihi♫', 'container_name': 'bar♫'},
         ]
         for obj in objects:
             self.assertIsNone(swift.Objects(self.creds_manager).delete(obj))
             self.cloud.delete_object.assert_called_with(
-                urllib_parse.quote(obj['container_name']),
-                urllib_parse.quote(obj['name'])
+                obj['container_name'],
+                obj['name']
             )
 
     def test_disable(self):
@@ -130,7 +130,7 @@ class TestContainers(unittest.TestCase):
                 'name': 'Pouet éêù #'}
         self.assertIsNone(swift.Containers(self.creds_manager).delete(cont))
         self.cloud.delete_container.assert_called_once_with(
-            urllib_parse.quote(cont['name'])
+            cont['name']
         )
 
     def test_disable(self):
@@ -140,7 +140,7 @@ class TestContainers(unittest.TestCase):
                 'name': 'Pouet éêù #'}
         self.assertIsNone(swift.Containers(self.creds_manager).disable(cont))
         self.cloud.object_store.set_container_metadata.assert_called_once_with(
-            urllib_parse.quote(cont['name']),
+            cont['name'],
             read_acl=None, write_acl=None
         )
 
