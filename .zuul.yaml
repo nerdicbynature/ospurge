@@ -3,13 +3,9 @@
     parent: devstack-tox-functional-consumer
     timeout: 3600
     required-projects:
-      - openstack/devstack-gate
-      - x/ospurge
+      # Additional supported projects
       - openstack/designate
-      - openstack/python-designateclient
       - openstack/octavia
-      - openstack/octavia-lib
-      - openstack/python-octaviaclient
     roles:
       - zuul: openstack-infra/devstack
     vars:
@@ -17,7 +13,6 @@
             designate: https://opendev.org/openstack/designate
             octavia: https://opendev.org/openstack/octavia
         devstack_localrc:
-            DESIGNATE_SERVICE_PORT_DNS: 5322
             DISABLE_AMP_IMAGE_BUILD: True
         devstack_local_conf:
             post-config:
