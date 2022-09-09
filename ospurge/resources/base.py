@@ -150,7 +150,7 @@ class ServiceResource(six.with_metaclass(CodingStyleMixin,
         raise NotImplementedError
 
     def wait_for_check_prerequisite(self, exit):
-        timeout = time.time() + 120
+        timeout = time.time() + 600
         sleep = 2
         while time.time() < timeout:
             if exit.is_set():
