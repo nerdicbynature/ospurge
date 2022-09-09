@@ -55,9 +55,9 @@ Install ``ospurge`` with ``pip``:
 
 .. code-block:: console
 
-    $ python3 -m pip install git+https://git.openstack.org/openstack/ospurge
+    $ python3 -m pip install git+https://github.com/nerdicbynature/ospurge
     $ OR, to checkout at commit 328f6
-    $ python3 -m pip install git+https://git.openstack.org/openstack/ospurge@328f6
+    $ python3 -m pip install git+https://github.com/nerdicbynature/ospurge@328f6
 
 Available options can be displayed with ``ospurge -h``:
 
