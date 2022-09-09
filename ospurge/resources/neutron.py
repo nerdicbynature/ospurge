@@ -17,11 +17,13 @@ class FloatingIPs(base.ServiceResource):
 
     def check_prerequisite(self):
         # We can't delete a FIP if it's attached
-        return self.cloud.list_servers() == []
+        # BUG: For some reason filtering does not work if running with admin creds and there 
+        # is at least one server in the admin project
+        return self.cloud.list_servers(filters={'project_id': self.cleanup_project_id}) == []
 
     def list(self):
         return self.cloud.search_floating_ips(filters={
-            'tenant_id': self.cleanup_project_id
+            'project_id': self.cleanup_project_id
         })
 
     def delete(self, resource):
@@ -45,7 +47,7 @@ class RouterInterfaces(base.ServiceResource):
         return (
             self.cloud.list_servers() == [] and
             self.cloud.search_floating_ips(
-                filters={'tenant_id': self.cleanup_project_id}
+                filters={'project_id': self.cleanup_project_id}
             ) == []
         )
 
@@ -55,7 +57,7 @@ class RouterInterfaces(base.ServiceResource):
                 'device_owner': ['network:router_interface',
                                  'network:router_interface_distributed',
                                  'network:ha_router_replicated_interface'],
-                'tenant_id': self.cleanup_project_id}
+                'project_id': self.cleanup_project_id}
         )
 
     def delete(self, resource):
@@ -77,7 +79,7 @@ class Routers(base.ServiceResource):
                 'device_owner': ['network:router_interface',
                                  'network:router_interface_distributed',
                                  'network:ha_router_replicated_interface'],
-                'tenant_id': self.cleanup_project_id}
+                'project_id': self.cleanup_project_id}
         ) == []
 
     def list(self):
@@ -103,7 +105,7 @@ class Ports(base.ServiceResource):
 
     def list(self):
         ports = self.cloud.list_ports(
-            filters={'tenant_id': self.cleanup_project_id}
+            filters={'project_id': self.cleanup_project_id}
         )
         excluded = ['network:dhcp',
                     'network:router_interface',
@@ -128,7 +130,7 @@ class Networks(base.ServiceResource):
 
     def check_prerequisite(self):
         ports = self.cloud.list_ports(
-            filters={'tenant_id': self.cleanup_project_id}
+            filters={'project_id': self.cleanup_project_id}
         )
         excluded = ['network:dhcp']
         return [p for p in ports if p['device_owner'] not in excluded] == []
@@ -136,7 +138,7 @@ class Networks(base.ServiceResource):
     def list(self):
         networks = []
         for network in self.cloud.list_networks(
-                filters={'tenant_id': self.cleanup_project_id}
+                filters={'project_id': self.cleanup_project_id}
         ):
             if network['router:external'] is True:
                 if not self.options.delete_shared_resources:
@@ -162,7 +164,7 @@ class SecurityGroups(base.ServiceResource):
 
     def list(self):
         return [sg for sg in self.cloud.list_security_groups(
-            filters={'tenant_id': self.cleanup_project_id})
+            filters={'project_id': self.cleanup_project_id})
             if sg['name'] != 'default']
 
     def delete(self, resource):
