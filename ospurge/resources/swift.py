@@ -18,7 +18,6 @@ class ListObjectsMixin(BaseServiceResource):
     def list_objects(self):
         for container in self.cloud.list_containers():
             for obj in self.cloud.list_objects(container['name']):
-                obj['container_name'] = container['name']
                 yield obj
 
 
@@ -34,12 +33,12 @@ class Objects(base.ServiceResource, glance.ListImagesMixin, ListObjectsMixin):
             yield item
 
     def delete(self, resource):
-        self.cloud.delete_object(resource['container_name'], resource['name'])
+        self.cloud.delete_object(resource['container'], resource['name'])
 
     @staticmethod
     def to_str(resource):
         return "Object '{}' from Container '{}'".format(
-            resource['name'], resource['container_name'])
+            resource['name'], resource['container'])
 
 
 class Containers(base.ServiceResource, ListObjectsMixin):
